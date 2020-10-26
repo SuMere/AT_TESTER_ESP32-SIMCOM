@@ -106,7 +106,7 @@ void test_at(const char* command) {
     bool flag = true;
 
     ESP_LOGI(TAG, "SENDING COMMAND =======> %s", command);
-    ESP_LOGI(TAG, "BYTES WRITTEN, WAITING FOR RESPONCE");
+    ESP_LOGI(TAG, "BYTES WRITTEN, WAITING");
 
     uint8_t* data = (uint8_t*) malloc(BUF_SIZE+1);
 
@@ -125,7 +125,7 @@ void test_at(const char* command) {
             uart_write_bytes(UART_NUMBER, command, strlen(command));
             uart_flush(UART_NUMBER);
 
-            ESP_LOGI(TAG, "WAITIN'");
+            ESP_LOGI(TAG, "*");
 
             vTaskDelay(500/portTICK_PERIOD_MS);
         }
