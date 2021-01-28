@@ -21,7 +21,7 @@ extern "C" {
 #define BUF_SIZE (2048)
 #define RD_BUF_SIZE (BUF_SIZE)
 #define MODEM_UART_TX 26
-#define MODEM_UART_RX 25
+#define MODEM_UART_RX 34
 
 /* TODO BE ABLE TO CONFIGURE IT
     GSM_ENABLE_GPIO on D47 is IO23
@@ -34,7 +34,7 @@ extern "C" {
 */
 
 #define GSM_ENABLE_GPIO 23
-#define GSM_VLTE_GPIO 5
+#define GSM_VLTE_GPIO 27
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GSM_ENABLE_GPIO) | (1ULL<<GSM_VLTE_GPIO))
 
 static QueueHandle_t uart0_queue;

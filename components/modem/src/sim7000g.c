@@ -4,6 +4,8 @@
 #define APN ""
 
 static const char *TAG = "SIM7000G";
+static int rssi_conversion[] = {-113,-111,-109,-107,-105,-103,-101,-99,-97,-95,-93,-91,-89,-87,-85,-83,-81,-79,-77,-75,-73,-71,-69,-67,-65,-63,-61,-59,-57,-55,-53};
+
 #define DCE_CHECK(a, str, goto_tag, ...)                                              \
     do                                                                                \
     {                                                                                 \
@@ -104,9 +106,11 @@ void modem_sync() {
 
 void test_at(const char* command) {
     bool flag = true;
+    int counter = 0;
 
     ESP_LOGI(TAG, "SENDING COMMAND =======> %s", command);
-    ESP_LOGI(TAG, "BYTES WRITTEN, WAITING FOR RESPONCE");
+    ESP_LOGI(TAG, "BYTES WRITTEN, WAITING");
+    uart_write_bytes(UART_NUMBER, command, strlen(command));
 
     uint8_t* data = (uint8_t*) malloc(BUF_SIZE+1);
 
@@ -117,18 +121,32 @@ void test_at(const char* command) {
             ESP_LOGI(TAG, "Read %d bytes: '%s'", rxBytes, data);
             ESP_LOG_BUFFER_HEXDUMP(TAG, data, rxBytes, ESP_LOG_INFO);
 
-            if(strstr((char *)data, "OK"))
+            if(strstr((char *)data, "OK")){
                 ESP_LOGI("INFO", "OK FOUND");
+            }
+            
+            if(strstr((char *)data, "+CSQ") != NULL){
+                int values[2];
+                
+                sscanf((char *) data, "%*s%d,%d", &values[0], &values[1]);
+                
+                ESP_LOGI("", "*************************************************");
+                ESP_LOGI("", "*\tSIGNAL STRENGHT IS: %d", rssi_conversion[values[0]]);
+                ESP_LOGI("", "*************************************************");
+            }
 
             flag = false;
-        } else {
-            uart_write_bytes(UART_NUMBER, command, strlen(command));
+        }else if(counter > 30){
+            ESP_LOGE(TAG, "COMMAND TIMEOUT");
+            flag = false;
+        }else {
             uart_flush(UART_NUMBER);
 
             ESP_LOGI(TAG, "WAITIN'");
 
             vTaskDelay(500/portTICK_PERIOD_MS);
         }
+        counter++;
     }
 
     free(data);
