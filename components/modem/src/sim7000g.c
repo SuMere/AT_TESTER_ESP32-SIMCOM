@@ -73,34 +73,19 @@ esp_err_t modem_on() {
 }
 
 void modem_sync() {
-    bool flag = true;
+    const char* command = "AT\r\n";
+    int counter = 0;
+    char data[100];
 
-    const char* command = "AT\r\n\r\n";
+    ESP_LOGI(TAG, "SYNCING");
+    uart_write_bytes(UART_NUMBER, command, strlen(command));
+    uart_flush(UART_NUMBER);
 
-    ESP_LOGI(TAG, "SENDING COMMAND =======> %s", command);
-    
-    ESP_LOGI(TAG, "BYTES WRITTEN, WAITING FOR RESPONCE");
-
-    uint8_t* data = (uint8_t*) malloc(BUF_SIZE+1);
-
-    while (flag) {
-        const int rxBytes = uart_read_bytes(UART_NUMBER, data, BUF_SIZE, 1000 / portTICK_RATE_MS);
-        if (rxBytes > 0) {
-            data[rxBytes] = 0;
-            ESP_LOGI(TAG, "Read %d bytes: '%s'", rxBytes, data);
-            ESP_LOG_BUFFER_HEXDUMP(TAG, data, rxBytes, ESP_LOG_INFO);
-
-            flag = false;
-        } else {
-            uart_write_bytes(UART_NUMBER, command, strlen(command));
-            uart_flush(UART_NUMBER);
-
-            ESP_LOGI(TAG, "WAITIN'");
-        }
+    while(uart_read_bytes(UART_NUMBER, data, 99, 1000 / portTICK_RATE_MS) > 0 && counter < 15){
+        ESP_LOGI(TAG, ".");
+        counter++;
     }
-
-    free(data);
-
+    
     ESP_LOGI(TAG, "SYNC OK");
 }
 
@@ -136,7 +121,7 @@ void test_at(const char* command) {
             }
 
             flag = false;
-        }else if(counter > 30){
+        }else if(counter > 0){
             ESP_LOGE(TAG, "COMMAND TIMEOUT");
             flag = false;
         }else {
@@ -158,6 +143,8 @@ esp_err_t modem_init() {
     gpio_setup();
     modem_on();
     uart_setup();
+
+    modem_sync();
 
     return ESP_OK;
 }
