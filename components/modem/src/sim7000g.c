@@ -2,6 +2,7 @@
 #include <string.h>
 
 #define APN ""
+#define TIMEOUT 120
 
 static const char *TAG = "SIM7000G";
 static int rssi_conversion[] = {-113,-111,-109,-107,-105,-103,-101,-99,-97,-95,-93,-91,-89,-87,-85,-83,-81,-79,-77,-75,-73,-71,-69,-67,-65,-63,-61,-59,-57,-55,-53};
@@ -91,6 +92,7 @@ void modem_sync() {
 
 void test_at(const char* command) {
     bool flag = true;
+    int counter = 0;
 
     ESP_LOGI(TAG, "SENDING COMMAND =======> %s", command);
     ESP_LOGI(TAG, "BYTES WRITTEN, WAITING");
@@ -105,6 +107,7 @@ void test_at(const char* command) {
         if(rxBytes > 0){
             ESP_LOGI(TAG, "Read %d bytes: '%s'", rxBytes, data);
             ESP_LOG_BUFFER_HEXDUMP(TAG, data, rxBytes, ESP_LOG_INFO);
+            counter = 0;
         }
 
         if(strstr((char *)data, "OK")){
@@ -113,10 +116,14 @@ void test_at(const char* command) {
         }else if(strstr((char *)data, "ERROR")){
             ESP_LOGE("INFO", "ERROR FOUND");
             flag = false;
+        }else if(counter > TIMEOUT){
+            ESP_LOGE("INFO", "TIMEOUT");
+            flag = false;
         }
         
-        ESP_LOGI("INFO", ".");
         rxBytes = uart_read_bytes(UART_NUMBER, data, BUF_SIZE, 1000 / portTICK_RATE_MS);
+
+        counter++;
     }
 
     free(data);
